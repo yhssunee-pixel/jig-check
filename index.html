@@ -20,7 +20,7 @@
   .popup-icon { font-size: 48px; margin-bottom: 12px; }
   .popup-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
   .popup-info { font-size: 13px; color: #555; margin-bottom: 4px; }
-  .popup-bar { height: 4px; background: #4361ee; border-radius: 2px; margin-top: 16px; animation: shrink 2s linear forwards; }
+  .popup-bar { height: 4px; background: #4361ee; border-radius: 2px; margin-top: 16px; animation: shrink 3s linear forwards; }
   @keyframes shrink { from { width: 100%; } to { width: 0%; } }
 </style>
 </head>
@@ -74,7 +74,9 @@ function tick() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "dontInvert"
+    });
     if (code) {
       processing = true;
       let raw = code.data;
@@ -126,7 +128,7 @@ function showPopup(icon, title, info1, info2, info3) {
   const bar = document.getElementById("popupBar");
   bar.style.animation = "none";
   bar.offsetHeight;
-  bar.style.animation = "shrink 2s linear forwards";
+  bar.style.animation = "shrink 3s linear forwards";
 
   popup.classList.add("show");
 
@@ -134,7 +136,7 @@ function showPopup(icon, title, info1, info2, info3) {
     popup.classList.remove("show");
     processing = false;
     status.textContent = "QR코드를 스캔하세요";
-  }, 2000);
+  }, 3000);
 }
 </script>
 </body>
