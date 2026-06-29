@@ -90,15 +90,23 @@ function tick() {
 }
 
 function checkCase(caseId) {
-  fetch(APPS_SCRIPT_URL + "?action=check&case_id=" + encodeURIComponent(caseId))
-    .then(res => res.json())
-    .then(result => showResult(result, caseId))
-    .catch(err => {
-      showPopup("❌", "오류 발생", err.message, "", "");
-    });
+  const script = document.createElement("script");
+  const callbackName = "cb_" + Date.now();
+  
+  window[callbackName] = function(result) {
+    document.head.removeChild(script);
+    delete window[callbackName];
+    showResult(result);
+  };
+
+  script.src = APPS_SCRIPT_URL + "?action=check&case_id=" + encodeURIComponent(caseId) + "&callback=" + callbackName;
+  script.onerror = function() {
+    showPopup("❌", "연결 오류", "네트워크를 확인해주세요", "", "");
+  };
+  document.head.appendChild(script);
 }
 
-function showResult(result, caseId) {
+function showResult(result) {
   if (result.status === "notfound") {
     showPopup("⚠️", "리스트에 없음", "오늘 임플란트 리스트에 없는 케이스", "", "");
   } else if (result.status === "already") {
