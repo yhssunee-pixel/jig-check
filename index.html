@@ -12,7 +12,7 @@
   .camera-wrap { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
   video { width: 100%; height: 100%; object-fit: cover; }
   canvas { display: none; }
-  .overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -60%); width: 250px; height: 250px; border: 3px solid #4361ee; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); z-index: 5; }
+  .overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -60%); width: 280px; height: 280px; border: 3px solid #4361ee; border-radius: 16px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); z-index: 5; }
   .overlay-text { position: fixed; bottom: 80px; left: 0; right: 0; text-align: center; color: white; font-size: 14px; z-index: 10; }
   .status { position: fixed; top: 60px; left: 0; right: 0; text-align: center; color: #4fc3f7; font-size: 14px; padding: 10px; z-index: 10; }
   .result-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 16px; padding: 24px; width: 85%; max-width: 340px; text-align: center; z-index: 20; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: none; }
@@ -51,14 +51,19 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxXU-TkUsechPU
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const status = document.getElementById("status");
 const popup = document.getElementById("popup");
 
 let processing = false;
 
+// 고해상도 카메라 요청
 navigator.mediaDevices.getUserMedia({ 
-  video: { facingMode: "environment" } 
+  video: { 
+    facingMode: "environment",
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+  } 
 }).then(stream => {
   video.srcObject = stream;
   video.play();
@@ -74,9 +79,12 @@ function tick() {
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: "dontInvert"
+    
+    // 정방향 + 반전 둘 다 시도
+    let code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "attemptBoth"
     });
+    
     if (code) {
       processing = true;
       let raw = code.data;
